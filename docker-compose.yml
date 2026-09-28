@@ -1,0 +1,64 @@
+services:
+  server:
+    build:
+      context: ./server
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      # Imported catalog + favorites live on a mounted volume so they survive
+      # restarts.
+      - CHANNELS_PATH=/app/storage/channels.json
+      - FAVORITES_PATH=/app/storage/favorites.json
+      - VOD_PATH=/app/storage/vod.json
+      - PROGRESS_PATH=/app/storage/progress.json
+      - USERS_PATH=/app/storage/users.json
+      # TMDB metadata SQLite DB — on the volume so enrichment survives rebuilds.
+      - METADATA_DB_PATH=/app/storage/metadata.db
+      # TMDB API Key for metadata enrichment (get from https://www.themoviedb.org/settings/api)
+      # Leave empty to disable metadata features
+      - TMDB_API_KEY=${TMDB_API_KEY:-}
+      # The stream proxy refuses upstreams on private/loopback/link-local
+      # addresses, so a viewer cannot aim it at the router or another LAN host.
+      # Set true ONLY if the IPTV provider is itself a box on this network.
+      - ALLOW_PRIVATE_UPSTREAM=${ALLOW_PRIVATE_UPSTREAM:-false}
+      # Sign-in sessions. Kept on the volume so a reboot doesn't sign the
+      # household's TVs out; only token hashes are stored.
+      - SESSIONS_PATH=/app/storage/sessions.json
+      # The /admin console's password (scrypt-hashed; chosen on first visit).
+      - ADMIN_PATH=/app/storage/admin.json
+      - ADMIN_SESSION_IDLE_HOURS=12
+      - ADMIN_SESSION_MAX_DAYS=7
+      - SESSION_IDLE_DAYS=30
+      - SESSION_MAX_DAYS=90
+      # Set true only when something in front terminates HTTPS.
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      # Live-transcode tuning. Defaults favour smooth real-time streaming
+      # (veryfast + zerolatency + bitrate cap) so the live edge never stalls.
+      # A 6-core/12-thread CPU (e.g. i7-8700) has headroom to bump PRESET to
+      # faster/fast or raise LIVE_MAXRATE for more quality; switch ENCODER to
+      # h264_qsv with a GPU passed in. Lower LIVE_MAX_SESSIONS on weaker hosts.
+      - TRANSCODE_PRESET=veryfast
+      - LIVE_CRF=23
+      - LIVE_MAXRATE=6M
+      - LIVE_BUFSIZE=12M
+      - LIVE_VIDEO_ENCODER=libx264
+      - LIVE_MAX_SESSIONS=6
+    volumes:
+      - iptv-data:/app/storage
+    expose:
+      - '3001'
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+    ports:
+      # Exposed on all interfaces → reachable from any device on the LAN
+      # (home computers, TV browsers) at http://<server-ip>:8080
+      - '8080:80'
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  iptv-data:

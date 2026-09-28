@@ -1,0 +1,49 @@
+# --- Dependencies & build output ---
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# --- Secrets ---
+# The TMDB key lives here; .env.example is the committed template.
+.env
+.env.*
+!.env.example
+
+# --- Runtime state (never commit) ---
+# `data/` holds the imported catalogue and everything the server persists.
+#
+# This matters more than it looks: provider stream URLs embed the subscription's
+# username and password (".../movie/<user>/<pass>/<id>.mkv"), so vod.json and
+# channels.json are credentials in bulk. users.json and admin.json carry PIN and
+# password hashes, sessions.json carries live session tokens, and metadata.db
+# runs to hundreds of megabytes — past what GitHub accepts in a single file.
+#
+# Patterns are unanchored (no leading slash) so they apply at every level:
+# `server/data/…` as well as `./data/…`. The previous `data/*.json` had a slash
+# in the middle, which git anchors to the repository root — so nothing under
+# server/data was actually ignored.
+# `**/` keeps this unanchored, and excluding the *contents* rather than the
+# directory is what lets .gitkeep be re-included — git never looks inside a
+# directory it has excluded outright.
+**/data/*
+!**/data/.gitkeep
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+storage/
+
+# --- Local tooling ---
+# Claude Code's local settings record the exact commands that were approved,
+# which in this project included curl calls carrying the provider password.
+.claude/
+
+# --- OS / editor noise ---
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json

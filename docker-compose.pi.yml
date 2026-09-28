@@ -1,0 +1,62 @@
+# Raspberry Pi 3 overrides.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d
+#
+# A Pi 3 is 4× Cortex-A53 @1.2–1.4 GHz with 1 GB of RAM, on an SD card, behind
+# USB-attached networking. It can comfortably proxy and remux streams; it cannot
+# re-encode video. These overrides reflect exactly that split.
+services:
+  server:
+    environment:
+      # ── No re-encoding ────────────────────────────────────────────────────
+      # There is no H.264 encoder ffmpeg can reach on a Pi 3 (the old h264_omx
+      # was dropped from Raspberry Pi OS), and software x264 cannot keep up with
+      # even 720p in real time. One session is a safety valve for a short clip,
+      # not a feature to rely on: HEVC channels will not play here.
+      - LIVE_MAX_SESSIONS=1
+      - TRANSCODE_PRESET=ultrafast
+      - LIVE_MAXRATE=2M
+      - LIVE_BUFSIZE=4M
+      # Larger segments = fewer wakeups and fewer writes per minute.
+      - LIVE_HLS_TIME=6
+
+      # ── Metadata is built elsewhere ───────────────────────────────────────
+      # Enriching a 64k catalogue is tens of thousands of paced HTTP calls; on a
+      # Pi it runs for many hours after every restart and fights with playback.
+      # Build metadata.db on a desktop and copy it onto the volume instead.
+      - AUTO_ENRICH_ON_BOOT=false
+
+      # Smaller pages: rendering 500 rows is slow on the TV browsers that will
+      # be talking to this host.
+      - CHANNELS_PAGE_LIMIT=200
+      - CATALOG_PAGE_LIMIT=40
+
+      # ── Scratch space: live in RAM, VOD on disk ───────────────────────────
+      # A live session keeps a six-segment sliding window (~15 MB) that is
+      # rewritten for as long as anyone watches — ideal for a RAM disk, and it
+      # spares the SD card constant writes.
+      - LIVE_SCRATCH_DIR=/dev/shm/iptv-live
+      # VOD is the opposite: an EVENT playlist deletes nothing until the session
+      # is reaped, so seeking backwards works — which means a whole film
+      # accumulates (a two-hour 5 Mbps title is several GB). It must live on real
+      # storage. Putting this in RAM fails with ENOSPC a few minutes into a film.
+      - VOD_SCRATCH_DIR=/app/storage/vod-cache
+
+    # /dev/shm defaults to 64 MB in a container; the live window needs a little
+    # more than that when several channels are open at once.
+    shm_size: 256m
+
+    # Leave headroom for nginx, ffmpeg and the OS on a 1 GB board.
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+    # Node's default heap assumes far more RAM than this board has.
+    command: ['node', '--max-old-space-size=384', 'dist/main.js']
+
+  web:
+    deploy:
+      resources:
+        limits:
+          memory: 64m

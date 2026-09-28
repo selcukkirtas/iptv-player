@@ -1,0 +1,1791 @@
+:root {
+  --bg: #0f1115;
+  --surface: #1a1d24;
+  --surface-2: #232732;
+  --text: #e8eaed;
+  --muted: #9aa0ac;
+  --accent: #4f8cff;
+  --accent-2: #ffce54;
+  --danger: #ff6b6b;
+  --radius: 14px;
+  /* Minimum comfortable touch target (TV remote focus + finger taps). */
+  --tap: 3rem;
+  --focus-ring: 0 0 0 4px rgba(79, 140, 255, 0.9);
+  /* Sticky-header height, so page filters can stick just beneath it. */
+  --header-h: 4.4rem;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 10-foot UI: scale the whole interface up; bump further on big screens. */
+html {
+  font-size: 18px;
+}
+
+@media (min-width: 1280px) {
+  html {
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 24px;
+  }
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* No hover dependence on touch screens; clear pressed feedback instead. */
+@media (hover: none) {
+  a:hover,
+  button:hover,
+  .channel-link:hover,
+  .poster-link:hover {
+    background: initial;
+  }
+}
+
+a:active,
+button:active,
+.channel-link:active,
+.poster-link:active,
+.episode-button:active {
+  transform: scale(0.98);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid #2b2f3a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  white-space: nowrap;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.app-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.app-nav a.active {
+  color: #fff;
+  background: var(--accent);
+}
+
+/* Narrower screens (iPad portrait, etc.): stack the header and let the nav
+   scroll horizontally so every item stays a full-size tap target. */
+@media (max-width: 1100px) {
+  :root {
+    --header-h: 7.25rem;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .app-nav {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .app-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-nav a {
+    flex: 0 0 auto;
+  }
+}
+
+.app-main {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 1.75rem 2rem;
+}
+
+h1 {
+  font-size: 1.9rem;
+  margin: 0 0 1.25rem;
+}
+
+h2 {
+  font-size: 1.3rem;
+}
+
+/* Search + category filters stay visible while the results scroll under them. */
+.controls {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 0 -2rem 1.25rem;
+  padding: 0.75rem 2rem;
+  background: var(--bg);
+  border-bottom: 1px solid #232732;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.control label {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+input,
+select {
+  background: var(--surface);
+  border: 1px solid #313644;
+  color: var(--text);
+  min-height: var(--tap);
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius);
+  font-size: 1.05rem;
+  min-width: 240px;
+}
+
+select {
+  cursor: pointer;
+}
+
+/* Prominent focus ring everywhere — essential for TV D-pad navigation. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+a:focus-visible,
+button:focus-visible,
+.channel-link:focus-visible,
+.poster-link:focus-visible,
+.episode-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  position: relative;
+  z-index: 1;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--accent);
+}
+
+button {
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  min-height: var(--tap);
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.channel-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+.channel-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid #2b2f3a;
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.channel-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1rem;
+  text-decoration: none;
+  color: var(--text);
+  text-align: center;
+}
+
+.channel-link:hover {
+  background: var(--surface-2);
+}
+
+.channel-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #000;
+}
+
+.channel-logo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+}
+
+.channel-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.channel-group {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ★ / ✕ overlay action — big enough to tap on a touch screen. */
+.fav-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--accent-2);
+  padding: 0;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.error {
+  color: var(--danger);
+}
+
+.success {
+  color: #5fd38d;
+}
+
+.empty-hint {
+  color: var(--muted);
+}
+
+.count-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
+}
+
+/* Inline text-style button (e.g. "Lock again"). */
+.linklike {
+  background: none;
+  border: none;
+  color: var(--accent);
+  padding: 0;
+  min-height: 0;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pin-gate {
+  border-color: var(--accent);
+}
+
+.form-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 0.85rem;
+}
+
+/* Poster grid (movies + series) */
+.poster-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.poster-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid #2b2f3a;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.poster-link {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  background: #000;
+}
+
+.poster.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.poster-title {
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.6rem 0.65rem 0.15rem;
+  line-height: 1.25;
+}
+
+.poster-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding: 0 0.65rem 0.7rem;
+}
+
+.poster-link:hover {
+  background: var(--surface-2);
+}
+
+/* Custom YouTube-style player chrome. */
+.player-stage {
+  position: relative;
+  line-height: 0;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.player-stage video {
+  display: block;
+  width: 100%;
+  max-height: 78vh;
+  cursor: pointer;
+}
+
+/* Fullscreen: let the stage fill the whole screen and the video fill the stage.
+   Without this the `max-height: 78vh` cap above still applies, leaving a black
+   band, and the stage isn't centred — so black strips appear around the video.
+   The picture's `object-fit` is set inline from the Fit/Fill toggle: `contain`
+   keeps the aspect ratio (genuine letterboxing when it differs from the screen);
+   `cover` crops the edges to remove the bars. */
+.player-stage:fullscreen,
+.player-stage:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-stage:fullscreen video,
+.player-stage:-webkit-full-screen video {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
+.player-stage:not(.show-controls) {
+  cursor: none;
+}
+
+.vp-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.4rem 0.9rem 0.6rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.88));
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  pointer-events: none;
+  line-height: normal;
+}
+
+.player-stage.show-controls .vp-controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.vp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vp-btn {
+  background: transparent;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0;
+  font-size: 1.4rem;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vp-btn.active {
+  color: var(--accent-2);
+}
+
+/* The Fit/Fill toggle shows a short text label rather than a glyph. */
+.vp-btn-aspect {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0 0.45rem;
+}
+
+.vp-time {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.vp-spacer {
+  flex: 1;
+}
+
+.vp-seek {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 0.35rem;
+  height: 0.4rem;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--pct, 0%),
+    rgba(255, 255, 255, 0.3) var(--pct, 0%)
+  );
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.vp-volume {
+  width: 6rem;
+  min-width: 4rem;
+  height: 0.35rem;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.vp-seek::-webkit-slider-thumb,
+.vp-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+
+.vp-seek::-moz-range-thumb,
+.vp-volume::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* Settings menu (audio + subtitle tracks) */
+.vp-menu-wrap {
+  position: relative;
+}
+
+.vp-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  min-width: 16rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: rgba(18, 21, 28, 0.97);
+  border: 1px solid #2b2f3a;
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.vp-menu-title {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.4rem 0.6rem 0.15rem;
+}
+
+.vp-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  min-height: 2.75rem;
+  padding: 0.5rem 0.7rem;
+  font-size: 1rem;
+}
+
+.vp-menu-item:hover,
+.vp-menu-item:focus-visible {
+  background: var(--surface-2);
+}
+
+.vp-menu-item.active {
+  color: var(--accent-2);
+}
+
+.player-status {
+  position: absolute;
+  left: 0.9rem;
+  top: 0.9rem;
+  background: rgba(0, 0, 0, 0.78);
+  color: var(--accent-2);
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  z-index: 2;
+  line-height: normal;
+}
+
+/* Subtitles, rendered by us so they sit above the custom control bar. */
+.vp-subtitles {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  max-width: 92%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+  line-height: normal;
+  pointer-events: none;
+  z-index: 1;
+  transition: bottom 0.2s;
+}
+
+.vp-subtitles.raised {
+  bottom: 5.25rem;
+}
+
+.vp-subtitles span {
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.35;
+  padding: 0.1rem 0.55rem;
+  border-radius: 4px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Series detail */
+.series-head {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.series-cover {
+  width: 180px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+
+.series-plot {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+  max-width: 80ch;
+}
+
+.now-playing {
+  margin-bottom: 1rem;
+}
+
+.now-playing-label {
+  color: var(--accent-2);
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+.now-playing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.next-button {
+  background: var(--surface-2);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Prev / next channel zapping bar on the player page. */
+.channel-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.channel-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 45%;
+  text-decoration: none;
+}
+
+.channel-nav-btn:last-child {
+  margin-left: auto;
+}
+
+.channel-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channel-nav-arrow {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.channel-nav-pos {
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.channel-nav-btn.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.player-aux {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.control-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.control-row input {
+  min-width: auto;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.control-row label {
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+/* Season tabs (replaces the season dropdown) */
+.season-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.season-tab {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid #2b2f3a;
+  font-weight: 600;
+}
+
+.season-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.episode-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.episode-button {
+  width: 100%;
+  min-height: 3.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid #2b2f3a;
+  padding: 0.85rem 1.1rem;
+  font-size: 1.05rem;
+}
+
+.episode-button:hover {
+  background: var(--surface-2);
+}
+
+.episode-button[aria-current='true'] {
+  border-color: var(--accent);
+  border-width: 2px;
+  color: var(--accent-2);
+}
+
+.episode-num {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 3rem;
+}
+
+.episode-title {
+  flex: 1;
+}
+
+.episode-progress {
+  color: var(--accent-2);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Continue-watching progress bar */
+.progress-bar {
+  display: block;
+  height: 6px;
+  background: #2b2f3a;
+  margin: 0.4rem 0.65rem 0.7rem;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.empty-hint a,
+.back-link {
+  color: var(--accent);
+}
+
+/* Player */
+.watch {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.watch-header h1 {
+  margin: 0.15rem 0 0.2rem;
+}
+
+.watch-kicker {
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.watch-info h1 {
+  margin-bottom: 0.25rem;
+}
+
+.watch-plot {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 80ch;
+  margin: 0;
+}
+
+.watch-meta {
+  background: var(--surface);
+  border: 1px solid #2b2f3a;
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.watch-meta-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.watch-meta-head p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.watch-meta-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.watch-meta-stat {
+  background: var(--surface-2);
+  border: 1px solid #2b2f3a;
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.watch-meta-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(122, 162, 255, 0.15);
+  color: var(--accent-2);
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.watch-meta-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.2rem;
+}
+
+.watch-meta-value {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.metadata-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #2b2f3a;
+}
+
+.metadata-pill {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  background: rgba(122, 162, 255, 0.12);
+  border: 1px solid rgba(122, 162, 255, 0.3);
+  border-radius: 6px;
+  color: #7aa2ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.metadata-pill:hover {
+  background: rgba(122, 162, 255, 0.25);
+  border-color: rgba(122, 162, 255, 0.6);
+  color: #9bbfff;
+}
+
+.watch-meta-people {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #2b2f3a;
+}
+
+.people-group {
+  margin-bottom: 1.5rem;
+}
+
+.people-group h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.people-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.people-group li {
+  padding: 0.5rem 0.75rem;
+  background: rgba(122, 162, 255, 0.08);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.people-group .character {
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: block;
+  margin-top: 0.1rem;
+}
+
+.watch-meta-sources {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #2b2f3a;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.source-card {
+  background: var(--surface-2);
+  border: 1px solid #2b2f3a;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.source-header {
+  margin-bottom: 0.75rem;
+}
+
+.source-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.source-stat {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+}
+
+.source-label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.2rem;
+}
+
+.source-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.source-value code {
+  font-family: monospace;
+  font-size: 0.85rem;
+  background: rgba(122, 162, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.source-id {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  word-break: break-all;
+}
+
+.source-id code {
+  background: rgba(122, 162, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* On-page audio/subtitle selector (mirrors the player's gear menu). */
+.track-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.track-panel .control {
+  min-width: 12rem;
+}
+
+.now-playing .track-panel {
+  margin: 0.5rem 0 0;
+}
+
+.fav-button-text {
+  background: var(--surface-2);
+  color: var(--accent-2);
+  margin-top: 0.5rem;
+}
+
+.back-link {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Import */
+.import-form {
+  background: var(--surface);
+  border: 1px solid #2b2f3a;
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  max-width: 720px;
+}
+
+.import-form h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+}
+
+.import-form button {
+  margin-top: 0.85rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.button-group button {
+  flex: 1;
+  margin-top: 0;
+}
+
+.status-message {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.status-message.success {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+  border-left: 3px solid #4caf50;
+}
+
+.status-message.error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+  border-left: 3px solid #f44336;
+}
+
+.current-meta {
+  margin-bottom: 1.25rem;
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Profiles: picker, header chip, manager                                     */
+/* -------------------------------------------------------------------------- */
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+  color: #fff;
+  font-size: 2.6rem;
+  font-weight: 700;
+}
+
+.avatar-sm {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 8px;
+  font-size: 1.05rem;
+}
+
+/* "Who's watching?" full-screen gate */
+.picker-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.picker-inner {
+  width: 100%;
+  max-width: 760px;
+  text-align: center;
+}
+
+.picker-title {
+  font-size: 2.2rem;
+  margin-bottom: 2rem;
+}
+
+.picker-grid {
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.picker-profile {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem;
+  color: var(--text);
+}
+
+.picker-profile:hover .avatar {
+  outline: 3px solid var(--accent);
+}
+
+.picker-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.picker-back {
+  margin-top: 1.5rem;
+}
+
+/* Header current-profile chip */
+.profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface-2);
+  padding: 0.35rem 0.7rem;
+  min-height: var(--tap);
+  white-space: nowrap;
+}
+
+.profile-chip-name {
+  font-weight: 600;
+}
+
+.profile-chip-switch {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Secondary (outline) button */
+.secondary {
+  background: transparent;
+  border: 1px solid #3a3f4c;
+  color: var(--text);
+}
+
+/* Manager list + editor */
+.manager-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.profile-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.6rem;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.profile-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.profile-row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.control-label {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.color-picker {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.color-dot {
+  width: 2.2rem;
+  height: 2.2rem;
+  min-height: 0;
+  border-radius: 50%;
+  padding: 0;
+  border: 2px solid transparent;
+}
+
+.color-dot.selected {
+  border-color: #fff;
+  box-shadow: var(--focus-ring);
+}
+
+.cat-selector {
+  border: 1px solid #2b2f3a;
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 1rem 0 0;
+}
+
+.cat-selector legend {
+  font-weight: 600;
+  padding: 0 0.4rem;
+}
+
+.cat-selector-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.6rem 0;
+}
+
+.cat-selector-groups {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #2b2f3a;
+  border-radius: var(--radius);
+  padding: 0.25rem 0.6rem;
+}
+
+.prefix-group {
+  border-bottom: 1px solid #232732;
+}
+
+.prefix-group:last-child {
+  border-bottom: none;
+}
+
+.prefix-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.2rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.prefix-summary::-webkit-details-marker {
+  display: none;
+}
+
+.prefix-summary::before {
+  content: '▸';
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.prefix-group[open] > .prefix-summary::before {
+  content: '▾';
+}
+
+.prefix-name {
+  font-weight: 600;
+  /* Codes vary in width (TR, AFG, FOR ADULTS); a floor keeps the headings
+     that follow them aligned down the list. */
+  min-width: 3.5rem;
+}
+
+/* The group's country name, or what it actually contains. Secondary to the
+   code, and truncated rather than pushing the counter off the row. */
+.prefix-title {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prefix-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.25rem 1rem;
+  padding: 0.2rem 0 0.6rem 1.8rem;
+}
+
+.cat-selector-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.cat-selector-item input,
+.control-row input[type='checkbox'] {
+  min-width: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.btn-sm {
+  min-height: 0;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.95rem;
+}
+
+.kids-toggle {
+  margin-top: 1rem;
+  align-items: flex-start;
+}
+
+.cat-selector-toolbar input[type='text'] {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ----- Database (metadata DB inspection) screen ----- */
+.db-stats {
+  color: var(--muted);
+  margin: -0.5rem 0 1rem;
+}
+
+.db-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.db-tab {
+  background: var(--surface);
+  border: 1px solid #313644;
+  color: var(--muted);
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius);
+  min-height: var(--tap);
+  cursor: pointer;
+}
+
+.db-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b0d12;
+  font-weight: 600;
+}
+
+.db-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #232732;
+  border-radius: var(--radius);
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.98rem;
+}
+
+.db-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  color: var(--muted);
+  text-align: left;
+  font-weight: 600;
+  padding: 0.6rem 0.8rem;
+  white-space: nowrap;
+  border-bottom: 1px solid #313644;
+}
+
+.db-table td {
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid #1f232c;
+  vertical-align: middle;
+}
+
+.db-table tbody tr:hover {
+  background: var(--surface);
+}
+
+.db-table .col-poster {
+  width: 46px;
+  padding-right: 0;
+}
+
+.db-poster {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+  background: var(--surface-2);
+}
+
+.db-poster-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.db-title-cell {
+  font-weight: 600;
+  max-width: 340px;
+}
+
+.db-title-cell a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.db-title-cell a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.db-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-width: 280px;
+}
+
+.db-genre-pill {
+  background: var(--surface-2);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.db-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.db-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+/* ----- Catalog toolbar (sort + view toggle + pager) ----- */
+.catalog-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid #313644;
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.view-toggle button {
+  background: var(--surface);
+  border: none;
+  color: var(--muted);
+  padding: 0 1rem;
+  min-height: var(--tap);
+  cursor: pointer;
+}
+
+.view-toggle button.active {
+  background: var(--accent);
+  color: #0b0d12;
+  font-weight: 600;
+}
+
+.toolbar-pager {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.db-sub {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 0.15rem;
+}
+
+/* ----- Database: deduplicated movie rows + versions ----- */
+.db-group-row {
+  cursor: pointer;
+}
+
+.db-group-row:hover {
+  background: var(--surface);
+}
+
+.db-group-row.open {
+  background: var(--surface-2);
+}
+
+.db-version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface-2);
+  border: 1px solid #313644;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.db-versions-row > td {
+  background: #14171d;
+  padding: 0.5rem 0.8rem 0.8rem;
+}
+
+.db-versions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.db-version {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.db-version-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.db-watch-btn {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #0b0d12;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius);
+  min-height: var(--tap);
+  display: inline-flex;
+  align-items: center;
+}
+
+.db-watch-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* Inline checkbox (e.g. "subtitled only" filter). */
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--tap);
+  cursor: pointer;
+  color: var(--text);
+}
+.checkbox-inline input[type='checkbox'] {
+  width: 1.15rem;
+  height: 1.15rem;
+  min-width: auto;
+  min-height: auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ----- Administration console (/admin) ----- */
+
+/* The console's tabs are buttons, not router links, so they need the nav's
+   look applied directly. */
+.app-nav .tab-on,
+.app-nav .tab-off {
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+}
+
+.app-nav .tab-off {
+  color: var(--muted);
+}
+
+.app-nav .tab-on {
+  color: var(--text);
+  background: #232732;
+}
+
+.admin-return {
+  margin-top: 2rem;
+}
+
+/* A suspended profile stays listed for the administrator, but reads as inactive. */
+.profile-row-off {
+  opacity: 0.55;
+}
+
+.profile-row-off strong::after {
+  content: ' (disabled)';
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* Elapsed seconds next to "Preparing stream…", so a slow source reads as
+   working rather than stuck. Secondary to the message itself. */
+.player-status-wait {
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
