@@ -82,10 +82,28 @@ export function onUnauthenticated(fn: () => void): () => void {
   return () => authListeners.delete(fn);
 }
 
+/**
+ * `AbortSignal.timeout` needs Safari 15.4, which rules out the older tablets
+ * this is watched on, so build the equivalent by hand. `TimeoutError` is kept as
+ * the reason so the caller below can tell a timeout from a cancellation exactly
+ * as it would with the native version.
+ */
+function timeoutSignal(ms: number): { signal: AbortSignal; done: () => void } {
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort(
+      typeof DOMException === 'function'
+        ? new DOMException('Timed out', 'TimeoutError')
+        : undefined,
+    );
+  }, ms);
+  return { signal: controller.signal, done: () => clearTimeout(timer) };
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   const timeoutMs = timeoutFor(path);
-  const signal = AbortSignal.timeout(timeoutMs);
+  const { signal, done } = timeoutSignal(timeoutMs);
 
   let res: Response;
   try {
@@ -93,6 +111,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     // automatically — there is nothing for script here to read or forge.
     res = await fetch(`${BASE}${path}`, { ...init, headers, signal });
   } catch (err) {
+    done();
     // A timeout arrives as an AbortError whose message ("Fetch is aborted",
     // "signal is aborted without reason", …) varies by browser and explains
     // nothing. Say what actually happened instead.
@@ -107,6 +126,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     }
     throw new Error('Could not reach the server. Check that it is running.');
   }
+  done();
 
   if (res.status === 401) {
     const message = await errorMessage(res);

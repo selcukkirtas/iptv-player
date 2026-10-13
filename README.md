@@ -28,6 +28,21 @@ the network — desktop or TV browser. Files the browser can't play natively
 
 ---
 
+## Browsers
+
+Built for **Safari 12.1 / Chrome 66 / Firefox 60 and newer** (`build.target` in
+`web/vite.config.ts`). That floor is deliberate: an old iPad makes an excellent
+second television, and an iPad mini 2 stops at iOS 12.5. Anything older than the
+floor downloads the bundle and then fails to parse it — a blank page with no
+visible error, only a console entry.
+
+Two consequences of that floor worth knowing:
+
+- On iOS, playback uses Safari's **native HLS** rather than `hls.js` (iOS has no
+  Media Source Extensions), which the player already falls back to.
+- Flexbox `gap` needs Safari 14.1, so spacing is a little tighter on iOS 12–14.
+  Everything remains usable; nothing is hidden.
+
 ## Quick start with Docker (recommended)
 
 From the repository root:

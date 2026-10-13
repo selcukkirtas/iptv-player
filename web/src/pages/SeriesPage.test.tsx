@@ -53,11 +53,14 @@ beforeEach(() => {
 afterEach(() => vi.clearAllMocks());
 
 describe('SeriesPage', () => {
-  it('shows metadata filters in the search UI', async () => {
+  it('applies metadata filters from the popup', async () => {
     const user = userEvent.setup();
     renderWithProviders(<SeriesPage />);
 
     expect(await screen.findByText('The Series')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Filters/ }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText('Year'), '2023');
     await user.selectOptions(screen.getByLabelText('Genre'), 'Drama');

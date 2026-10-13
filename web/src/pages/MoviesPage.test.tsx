@@ -55,11 +55,25 @@ beforeEach(() => {
 afterEach(() => vi.clearAllMocks());
 
 describe('MoviesPage', () => {
-  it('shows metadata filters in the search UI', async () => {
+  it('keeps the advanced filters behind a button, not on the page', async () => {
+    renderWithProviders(<MoviesPage />);
+    expect(await screen.findByText('The Movie')).toBeInTheDocument();
+
+    // Search and Category stay inline; the other ten used to fill the screen.
+    expect(screen.getByLabelText('Search')).toBeInTheDocument();
+    expect(screen.getByLabelText('Category')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Year')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Actor')).not.toBeInTheDocument();
+  });
+
+  it('applies metadata filters from the popup', async () => {
     const user = userEvent.setup();
     renderWithProviders(<MoviesPage />);
 
     expect(await screen.findByText('The Movie')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Filters/ }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText('Year'), '2024');
     await user.selectOptions(screen.getByLabelText('Genre'), 'Drama');
@@ -74,6 +88,63 @@ describe('MoviesPage', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('Actor')).toHaveValue('Actor One'),
     );
-    expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear all' })).toBeEnabled();
+
+    // Closing keeps the filters applied and shows how many are set.
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^Filters.*3 active/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('closes the popup with Escape', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MoviesPage />);
+    await screen.findByText('The Movie');
+
+    await user.click(screen.getByRole('button', { name: /^Filters/ }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('keeps a way out reachable however tall the filter list gets', async () => {
+    // The dialog scrolls its *body*; the header and footer hold the only ways
+    // to close it. When the body was not allowed to shrink, the panel grew past
+    // its max-height and carried the footer off screen — on a tablet, with no
+    // Escape key, that left the dialog impossible to close. Assert the
+    // structure that keeps it reachable rather than the pixels, which jsdom
+    // cannot measure.
+    const user = userEvent.setup();
+    renderWithProviders(<MoviesPage />);
+    await screen.findByText('The Movie');
+    await user.click(screen.getByRole('button', { name: /^Filters/ }));
+
+    const dialog = await screen.findByRole('dialog');
+    const scroller = dialog.querySelector('.filter-panel-body');
+    const close = screen.getByRole('button', { name: 'Close filters' });
+    const done = screen.getByRole('button', { name: 'Done' });
+
+    expect(scroller).not.toBeNull();
+    expect(scroller?.contains(close)).toBe(false);
+    expect(scroller?.contains(done)).toBe(false);
+    // Both live directly under the panel, as siblings of the scrolling body.
+    expect(close.closest('.filter-panel')).toBe(dialog);
+    expect(done.closest('.filter-panel')).toBe(dialog);
+  });
+
+  it('closes after a filter has been changed', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MoviesPage />);
+    await screen.findByText('The Movie');
+    await user.click(screen.getByRole('button', { name: /^Filters/ }));
+    await screen.findByRole('dialog');
+
+    // Changing a filter re-renders the page; closing must still work.
+    await user.selectOptions(screen.getByLabelText('Year'), '2024');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
